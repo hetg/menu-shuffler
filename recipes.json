@@ -1,0 +1,6 @@
+[
+    {"id" : 1, "name": "Omelette", "calories": 250, "protein": 18, "fat": 20, "carbs": 2, "ingredients": ["eggs", "milk", "butter"]},
+    {"id" : 2, "name": "Chicken Salad", "calories": 350, "protein": 30, "fat": 15, "carbs": 10, "ingredients": ["chicken", "lettuce", "olive oil"]},
+    {"id" : 3, "name": "Grilled Chicken Breast", "calories": 450, "protein": 50, "fat": 10, "carbs": 10, "ingredients": ["chicken", "olive oil"]},
+    {"id" : 4, "name": "Boiled Egg", "calories": 300, "protein": 40, "fat": 10, "carbs": 2, "ingredients": ["eggs"]}
+]

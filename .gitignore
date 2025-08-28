@@ -1,0 +1,42 @@
+.idea/
+__pycache__/
+venv/
+# Byte-compiled / cache
+*.py[cod]
+*$py.class
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+env/
+ENV/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Distribution / packaging
+.Python
+build/
+dist/
+wheels/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Logs
+*.log
+logs/
+
+# Test/coverage
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# Environment variables
+.env
+.env.*
