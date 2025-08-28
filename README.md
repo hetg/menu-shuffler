@@ -10,7 +10,7 @@ The UI labels are in Ukrainian; the app works regardless of the interface langua
 
 ## Demo (What it does)
 
-1. Click "Згенерувати меню" to ask the local LLM to propose dishes for each meal using the recipes.json database.
+1. Click "Згенерувати меню" to ask the local LLM to propose dishes for each meal using the `recipes.json` database.
 2. Set your total calories and the relative weights of each meal (e.g., breakfast 25%, lunch 40%, etc.).
 3. Click "Порахувати порції" to automatically scale the portions so that the total matches your calorie target.
 
@@ -40,26 +40,37 @@ If you do not install or run Ollama, the app still works using a built-in defaul
 It is recommended to use a virtual environment.
 
 - Linux/macOS
-  - python3 -m venv .venv
-  - source .venv/bin/activate
+  
+  ```bash
+  python3 -m venv .venv
+  source .venv/bin/activate
+  ```
+
 - Windows (PowerShell)
-  - python -m venv .venv
-  - .venv\\Scripts\\Activate.ps1
+  
+  ```powershell
+  python -m venv .venv
+  .venv\Scripts\Activate.ps1
+  ```
 
 Then install dependencies:
 
-- pip install -r requirements.txt
+```bash
+pip install -r requirements.txt
+```
 
 Optional (for LLM features):
 
 - Install Ollama: https://ollama.com/download
-- Pull or create the local model referenced by `llm.py` (default `hetg/llama3-nutrition`). If you have a custom model name, edit `MODEL` in llm.py.
+- Pull or create the local model referenced by `llm.py` (default `hetg/llama3-nutrition`). If you have a custom model name, edit `MODEL` in `llm.py`.
 
 ## Running the app
 
 From the project root:
 
-- python menu_shuffler.py
+```bash
+python menu_shuffler.py
+```
 
 Gradio will print a local URL in the console (e.g., http://127.0.0.1:7860). Open it in your browser.
 
@@ -73,12 +84,15 @@ Gradio will print a local URL in the console (e.g., http://127.0.0.1:7860). Open
 
 recipes.json entries look like this:
 
+```json
 [
   {"id": 1, "name": "Omelette", "calories": 250, "protein": 18, "fat": 20, "carbs": 2, "ingredients": ["eggs", "milk", "butter"]}
 ]
+```
 
 The LLM is expected to return a JSON object like:
 
+```json
 {
   "breakfast": [{"id": 1}],
   "first_snack": [{"id": 4}],
@@ -86,13 +100,18 @@ The LLM is expected to return a JSON object like:
   "second_snack": [{"id": 4}],
   "dinner": [{"id": 3}]
 }
+```
 
 llm.py sanitizes this to ensure only known recipe IDs are used.
 
 ## Troubleshooting
 
 - Ollama not running / missing model:
-  - Start Ollama (ollama serve) and ensure the model name in llm.py exists (e.g., `ollama run hetg/llama3-nutrition`).
+  - Start Ollama and ensure the model exists:
+    ```bash
+    ollama serve
+    ollama run hetg/llama3-nutrition
+    ```
   - If you prefer no-LLM usage, just skip the "Згенерувати меню" button and use the portion calculator.
 - Port already in use: Gradio picks the next available port or you can pass parameters to `MenuUI().launch(server_port=xxxx)`.
 - Missing packages: Re-run `pip install -r requirements.txt` in the active virtual environment.
@@ -100,4 +119,4 @@ llm.py sanitizes this to ensure only known recipe IDs are used.
 ## Development
 
 - Code style: the repo includes ruff in requirements. You can run ruff if installed globally or via the venv.
-- Minimal algorithm details: see Algorithm.generate_menu_with_weights() for the normalization and scaling steps.
+- Minimal algorithm details: see `Algorithm.generate_menu_with_weights()` for the normalization and scaling steps.
