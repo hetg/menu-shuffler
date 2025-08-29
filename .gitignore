@@ -40,3 +40,44 @@ htmlcov/
 # Environment variables
 .env
 .env.*
+
+# Django
+*.pot
+*.pyc
+local_settings.py
+settings_local.py
+.db.sqlite3
+*.sqlite3
+media/
+staticfiles/
+
+# Django stuff:
+*.mo
+
+# pytest and coverage already above
+
+# mypy cache already above
+
+# celery beat schedule file
+celerybeat-schedule
+celerybeat.pid
+
+# Django SQL schema
+*.sql
+
+# Backup files
+*.bak
+*.swp
+*.swo
+
+# macOS/Linux editor backup files already covered
+
+# VSCode already covered
+
+# Docker/compose artifacts (optional, safe)
+*.pid
+
+# Do not ignore migrations to keep them versioned
+# apps/**/migrations/
+
+
