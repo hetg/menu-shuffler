@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Генератор меню</title>
+    <style>
+        body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif; margin: 0; padding: 0; background: #f6f7fb; color: #111; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
+        h1 { margin: 0 0 16px; font-size: 28px; }
+        .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; margin: 12px 0; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+        .row { display: flex; flex-wrap: wrap; gap: 12px; }
+        .row .field { flex: 1 1 160px; min-width: 160px; }
+        label { display: block; font-size: 12px; color: #555; margin-bottom: 6px; }
+        input[type="number"] { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; outline: none; }
+        input[type="number"]:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15); }
+        .btn { display: inline-block; border: 1px solid #6366f1; background: #6366f1; color: #fff; padding: 10px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .btn[disabled] { opacity: 0.6; cursor: not-allowed; }
+        .btn.secondary { background: #fff; color: #111; border-color: #d1d5db; }
+        .tabs { display: none; margin-top: 10px; }
+        .tabs.visible { display: block; }
+        .tab-headers { display: flex; gap: 6px; flex-wrap: wrap; }
+        .tab-headers button { padding: 8px 10px; border: 1px solid #d1d5db; background: #f9fafb; border-radius: 8px; cursor: pointer; }
+        .tab-headers button.active { background: #eef2ff; border-color: #6366f1; color: #3730a3; }
+        .tab-body { border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; margin-top: 8px; background: #fff; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th, td { text-align: left; padding: 8px; border-bottom: 1px solid #f0f0f0; }
+        th { background: #fafafa; }
+        .muted { color: #6b7280; font-size: 12px; }
+        .hidden { display: none; }
+        .flex { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Генератор меню</h1>
+
+    <!-- LLM generation section -->
+    <div class="card">
+        <form method="post" class="flex" id="llm-form">
+            {% csrf_token %}
+            <button type="submit" name="action" value="llm" class="btn">Згенерувати меню</button>
+            <button type="submit" name="action" value="clear" class="btn secondary" id="clear-btn">Очистити</button>
+            <span class="muted">Спершу згенеруйте меню, потім перерахуйте порції.</span>
+        </form>
+        <div id="llm-tabs" class="tabs {% if menu_from_llm %}visible{% endif %}">
+            <div class="tab-headers" data-tabs="llm">
+                <button data-tab="breakfast" class="active">Сніданок</button>
+                <button data-tab="first_snack">Перший перекус</button>
+                <button data-tab="lunch">Обід</button>
+                <button data-tab="second_snack">Другий перекус</button>
+                <button data-tab="dinner">Вечеря</button>
+            </div>
+            <div class="tab-body">
+                <div class="tab-panel" data-panel="llm:breakfast">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Страва</th>
+                            <th>Порція</th>
+                            <th>КБЖВ</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% if menu_from_llm and menu_from_llm.breakfast %}
+                            {% for d in menu_from_llm.breakfast %}
+                                <tr>
+                                    <td>{{ d.name }}</td>
+                                    <td>{{ d.portion|default:0 }}</td>
+                                    <td>{{ d.calories|default:0 }} / {{ d.protein|default:0 }} / {{ d.fat|default:0 }} / {{ d.carbs|default:0 }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="3" class="muted">Немає даних</td></tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr><td colspan="3" class="muted">Немає даних</td></tr>
+                        {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="tab-panel" data-panel="llm:first_snack" style="display:none">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Страва</th>
+                            <th>Порція</th>
+                            <th>КБЖВ</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% if menu_from_llm and menu_from_llm.first_snack %}
+                            {% for d in menu_from_llm.first_snack %}
+                                <tr>
+                                    <td>{{ d.name }}</td>
+                                    <td>{{ d.portion|default:0 }}</td>
+                                    <td>{{ d.calories|default:0 }} / {{ d.protein|default:0 }} / {{ d.fat|default:0 }} / {{ d.carbs|default:0 }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="3" class="muted">Немає даних</td></tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr><td colspan="3" class="muted">Немає даних</td></tr>
+                        {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="tab-panel" data-panel="llm:lunch" style="display:none">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Страва</th>
+                            <th>Порція</th>
+                            <th>КБЖВ</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% if menu_from_llm and menu_from_llm.lunch %}
+                            {% for d in menu_from_llm.lunch %}
+                                <tr>
+                                    <td>{{ d.name }}</td>
+                                    <td>{{ d.portion|default:0 }}</td>
+                                    <td>{{ d.calories|default:0 }} / {{ d.protein|default:0 }} / {{ d.fat|default:0 }} / {{ d.carbs|default:0 }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="3" class="muted">Немає даних</td></tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr><td colspan="3" class="muted">Немає даних</td></tr>
+                        {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="tab-panel" data-panel="llm:second_snack" style="display:none">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Страва</th>
+                            <th>Порція</th>
+                            <th>КБЖВ</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% if menu_from_llm and menu_from_llm.second_snack %}
+                            {% for d in menu_from_llm.second_snack %}
+                                <tr>
+                                    <td>{{ d.name }}</td>
+                                    <td>{{ d.portion|default:0 }}</td>
+                                    <td>{{ d.calories|default:0 }} / {{ d.protein|default:0 }} / {{ d.fat|default:0 }} / {{ d.carbs|default:0 }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="3" class="muted">Немає даних</td></tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr><td colspan="3" class="muted">Немає даних</td></tr>
+                        {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="tab-panel" data-panel="llm:dinner" style="display:none">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Страва</th>
+                            <th>Порція</th>
+                            <th>КБЖВ</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% if menu_from_llm and menu_from_llm.dinner %}
+                            {% for d in menu_from_llm.dinner %}
+                                <tr>
+                                    <td>{{ d.name }}</td>
+                                    <td>{{ d.portion|default:0 }}</td>
+                                    <td>{{ d.calories|default:0 }} / {{ d.protein|default:0 }} / {{ d.fat|default:0 }} / {{ d.carbs|default:0 }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="3" class="muted">Немає даних</td></tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr><td colspan="3" class="muted">Немає даних</td></tr>
+                        {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Algorithm section -->
+    <div class="card">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row">
+                <div class="field">
+                    <label for="target_calories">Кількість калорій</label>
+                    <input type="number" id="target_calories" name="target_calories" value="{{ request.POST.target_calories|default:1800 }}" step="any">
+                </div>
+                <div class="field">
+                    <label for="breakfast_weight">Сніданок (%)</label>
+                    <input type="number" id="breakfast_weight" name="breakfast_weight" value="{{ request.POST.breakfast_weight|default:0.25 }}" step="any">
+                </div>
+                <div class="field">
+                    <label for="first_snack_weight">Перший перекус (%)</label>
+                    <input type="number" id="first_snack_weight" name="first_snack_weight" value="{{ request.POST.first_snack_weight|default:0.05 }}" step="any">
+                </div>
+                <div class="field">
+                    <label for="lunch_weight">Обід (%)</label>
+                    <input type="number" id="lunch_weight" name="lunch_weight" value="{{ request.POST.lunch_weight|default:0.4 }}" step="any">
+                </div>
+                <div class="field">
+                    <label for="second_snack_weight">Другий перекус (%)</label>
+                    <input type="number" id="second_snack_weight" name="second_snack_weight" value="{{ request.POST.second_snack_weight|default:0.05 }}" step="any">
+                </div>
+                <div class="field">
+                    <label for="dinner_weight">Вечеря (%)</label>
+                    <input type="number" id="dinner_weight" name="dinner_weight" value="{{ request.POST.dinner_weight|default:0.25 }}" step="any">
+                </div>
+            </div>
+            <div class="flex" style="margin-top:10px;">
+                <button type="submit" name="action" value="calc" class="btn" {% if not menu_from_llm %}disabled{% endif %}>Порахувати порції</button>
+                <div id="total_box" class="{% if not menu_calculated %}hidden{% endif %}">
+                    <label>Загальна кількість калорій (kcal)</label>
+                    <input type="number" value="{{ menu_calculated.1|default_if_none:'' }}" readonly>
+                </div>
+            </div>
+        </form>
+
+        <div id="calc-tabs" class="tabs {% if menu_calculated %}visible{% endif %}" style="margin-top:10px;">
+            <div class="tab-headers" data-tabs="calc">
+                <button data-tab="breakfast" class="active">Сніданок</button>
+                <button data-tab="first_snack">Перший перекус</button>
+                <button data-tab="lunch">Обід</button>
+                <button data-tab="second_snack">Другий перекус</button>
+                <button data-tab="dinner">Вечеря</button>
+            </div>
+            <div class="tab-body">
+                <div class="tab-panel" data-panel="calc:breakfast">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Страва</th>
+                            <th>Порція</th>
+                            <th>КБЖВ</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% if menu_calculated %}
+                            {% for d in menu_calculated.0.breakfast %}
+                                <tr>
+                                    <td>{{ d.name }}</td>
+                                    <td>{{ d.portion|default:0 }}</td>
+                                    <td>{{ d.calories|default:0 }} / {{ d.protein|default:0 }} / {{ d.fat|default:0 }} / {{ d.carbs|default:0 }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="3" class="muted">Немає даних</td></tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr><td colspan="3" class="muted">Немає даних</td></tr>
+                        {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="tab-panel" data-panel="calc:first_snack" style="display:none">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Страва</th>
+                            <th>Порція</th>
+                            <th>КБЖВ</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% if menu_calculated %}
+                            {% for d in menu_calculated.0.first_snack %}
+                                <tr>
+                                    <td>{{ d.name }}</td>
+                                    <td>{{ d.portion|default:0 }}</td>
+                                    <td>{{ d.calories|default:0 }} / {{ d.protein|default:0 }} / {{ d.fat|default:0 }} / {{ d.carbs|default:0 }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="3" class="muted">Немає даних</td></tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr><td colspan="3" class="muted">Немає даних</td></tr>
+                        {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="tab-panel" data-panel="calc:lunch" style="display:none">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Страва</th>
+                            <th>Порція</th>
+                            <th>КБЖВ</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% if menu_calculated %}
+                            {% for d in menu_calculated.0.lunch %}
+                                <tr>
+                                    <td>{{ d.name }}</td>
+                                    <td>{{ d.portion|default:0 }}</td>
+                                    <td>{{ d.calories|default:0 }} / {{ d.protein|default:0 }} / {{ d.fat|default:0 }} / {{ d.carbs|default:0 }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="3" class="muted">Немає даних</td></tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr><td colspan="3" class="muted">Немає даних</td></tr>
+                        {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="tab-panel" data-panel="calc:second_snack" style="display:none">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Страва</th>
+                            <th>Порція</th>
+                            <th>КБЖВ</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% if menu_calculated %}
+                            {% for d in menu_calculated.0.second_snack %}
+                                <tr>
+                                    <td>{{ d.name }}</td>
+                                    <td>{{ d.portion|default:0 }}</td>
+                                    <td>{{ d.calories|default:0 }} / {{ d.protein|default:0 }} / {{ d.fat|default:0 }} / {{ d.carbs|default:0 }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="3" class="muted">Немає даних</td></tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr><td colspan="3" class="muted">Немає даних</td></tr>
+                        {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="tab-panel" data-panel="calc:dinner" style="display:none">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Страва</th>
+                            <th>Порція</th>
+                            <th>КБЖВ</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% if menu_calculated %}
+                            {% for d in menu_calculated.0.dinner %}
+                                <tr>
+                                    <td>{{ d.name }}</td>
+                                    <td>{{ d.portion|default:0 }}</td>
+                                    <td>{{ d.calories|default:0 }} / {{ d.protein|default:0 }} / {{ d.fat|default:0 }} / {{ d.carbs|default:0 }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="3" class="muted">Немає даних</td></tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr><td colspan="3" class="muted">Немає даних</td></tr>
+                        {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function(){
+  function setupTabs(scope){
+    const headers = document.querySelector('.tab-headers[data-tabs="'+scope+'"]');
+    if(!headers) return;
+    headers.addEventListener('click', function(e){
+      if(e.target.tagName !== 'BUTTON') return;
+      const tab = e.target.getAttribute('data-tab');
+      headers.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+      e.target.classList.add('active');
+      document.querySelectorAll('.tab-panel[data-panel^="'+scope+':"]').forEach(p=>{
+        if(p.getAttribute('data-panel') === scope+':'+tab){ p.style.display='block'; }
+        else { p.style.display='none'; }
+      });
+    });
+  }
+  setupTabs('llm');
+  setupTabs('calc');
+})();
+</script>
+<script>
+// Async handlers for LLM generation and calculation
+(function(){
+  function getCsrf(){
+    const el = document.querySelector('input[name="csrfmiddlewaretoken"]');
+    return el ? el.value : '';
+  }
+  function setLoading(btn, loading){
+    if(!btn) return;
+    if(loading){
+      btn.dataset.oldText = btn.textContent;
+      btn.textContent = 'Завантаження...';
+      btn.setAttribute('disabled','disabled');
+    } else {
+      if(btn.dataset.oldText) btn.textContent = btn.dataset.oldText;
+      btn.removeAttribute('disabled');
+    }
+  }
+  function rowsHtml(list){
+    if(!Array.isArray(list) || list.length===0){
+      return '<tr><td colspan="3" class="muted">Немає даних</td></tr>';
+    }
+    return list.map(d=>{
+      const name = (d && d.name)!=null ? d.name : '';
+      const portion = (d && d.portion)!=null ? d.portion : 0;
+      const cal = (d && d.calories)!=null ? d.calories : 0;
+      const p = (d && d.protein)!=null ? d.protein : 0;
+      const f = (d && d.fat)!=null ? d.fat : 0;
+      const c = (d && d.carbs)!=null ? d.carbs : 0;
+      return `<tr><td>${name}</td><td>${portion}</td><td>${cal} / ${p} / ${f} / ${c}</td></tr>`;
+    }).join('');
+  }
+  function updateLlmTabs(menu){
+    if(!menu) return;
+    const map = {
+      breakfast: 'llm:breakfast',
+      first_snack: 'llm:first_snack',
+      lunch: 'llm:lunch',
+      second_snack: 'llm:second_snack',
+      dinner: 'llm:dinner'
+    };
+    Object.keys(map).forEach(k=>{
+      const panel = document.querySelector(`.tab-panel[data-panel="${map[k]}"] tbody`);
+      if(panel){ panel.innerHTML = rowsHtml(menu[k]); }
+    });
+    const tabs = document.getElementById('llm-tabs');
+    if(tabs) tabs.classList.add('visible');
+    // enable calc button
+    const calcBtn = document.querySelector('button[name="action"][value="calc"]');
+    if(calcBtn){ calcBtn.removeAttribute('disabled'); }
+  }
+  function updateCalcTabs(menu, total){
+    const map = {
+      breakfast: 'calc:breakfast',
+      first_snack: 'calc:first_snack',
+      lunch: 'calc:lunch',
+      second_snack: 'calc:second_snack',
+      dinner: 'calc:dinner'
+    };
+    Object.keys(map).forEach(k=>{
+      const panel = document.querySelector(`.tab-panel[data-panel="${map[k]}"] tbody`);
+      if(panel){ panel.innerHTML = rowsHtml(menu ? menu[k] : []); }
+    });
+    const tabs = document.getElementById('calc-tabs');
+    if(tabs) tabs.classList.add('visible');
+    const totalBox = document.getElementById('total_box');
+    if(totalBox){ totalBox.classList.remove('hidden');
+      const input = totalBox.querySelector('input[type="number"]');
+      if(input) input.value = total!=null ? total : '';
+    }
+  }
+
+  // Intercept LLM form
+  const llmForm = document.querySelector('#llm-form');
+  if(llmForm){
+    llmForm.addEventListener('submit', function(e){
+      const submitter = e.submitter; // button
+      if(!(submitter && submitter.name==='action')) return;
+      const action = submitter.value;
+      if(action==='llm'){
+        e.preventDefault();
+        const btn = submitter;
+        setLoading(btn, true);
+        // Hide both sections and disable calculate while generating
+        const llmTabsEl = document.getElementById('llm-tabs');
+        if(llmTabsEl){ llmTabsEl.classList.remove('visible'); }
+        const calcBtnEl = document.querySelector('button[name="action"][value="calc"]');
+        if(calcBtnEl){ calcBtnEl.setAttribute('disabled', 'disabled'); }
+        const calcTabsEl = document.getElementById('calc-tabs');
+        if(calcTabsEl){ calcTabsEl.classList.remove('visible'); }
+        const totalBoxEl = document.getElementById('total_box');
+        if(totalBoxEl){ totalBoxEl.classList.add('hidden'); const inp = totalBoxEl.querySelector('input[type="number"]'); if(inp){ inp.value=''; } }
+        // Optionally clear visible table bodies to avoid stale data during loading
+        document.querySelectorAll('.tab-panel[data-panel^="llm:"] tbody').forEach(tb=>tb.innerHTML='');
+        document.querySelectorAll('.tab-panel[data-panel^="calc:"] tbody').forEach(tb=>tb.innerHTML='');
+        const data = new FormData(llmForm);
+        // Ensure action is sent explicitly (FormData may omit submitter)
+        if(submitter && submitter.name){ data.append(submitter.name, submitter.value); }
+        fetch(window.location.href, {
+          method: 'POST',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCsrf()
+          },
+          body: data
+        }).then(r=>r.json()).then(js=>{
+          if(js && js.ok){
+            updateLlmTabs(js.menu_from_llm);
+          }
+        }).catch(()=>{}).finally(()=>{
+          setLoading(btn, false);
+        });
+      } else if(action==='clear'){
+        e.preventDefault();
+        const btn = submitter;
+        setLoading(btn, true);
+        const data = new FormData();
+        data.append('action','clear');
+        fetch(window.location.href, {
+          method: 'POST',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCsrf()
+          },
+          body: data
+        }).then(r=>r.json()).then(js=>{
+          if(js && js.ok && js.cleared){
+            // Hide LLM tabs and clear their bodies
+            const llmTabs = document.getElementById('llm-tabs');
+            if(llmTabs){ llmTabs.classList.remove('visible'); }
+            document.querySelectorAll('.tab-panel[data-panel^="llm:"] tbody').forEach(tb=>tb.innerHTML='');
+            // Disable calc button and hide calc tabs and total
+            const calcBtn = document.querySelector('button[name="action"][value="calc"]');
+            if(calcBtn){ calcBtn.setAttribute('disabled','disabled'); }
+            const calcTabs = document.getElementById('calc-tabs');
+            if(calcTabs){ calcTabs.classList.remove('visible'); }
+            const totalBox = document.getElementById('total_box');
+            if(totalBox){
+              totalBox.classList.add('hidden');
+              const input = totalBox.querySelector('input[type="number"]');
+              if(input) input.value = '';
+            }
+            document.querySelectorAll('.tab-panel[data-panel^="calc:"] tbody').forEach(tb=>tb.innerHTML='');
+          }
+        }).catch(()=>{}).finally(()=>{
+          setLoading(btn, false);
+        });
+      }
+    });
+  }
+
+  // Intercept Calc form
+  const calcForm = document.querySelectorAll('form')[1];
+  if(calcForm){
+    calcForm.addEventListener('submit', function(e){
+      const submitter = e.submitter;
+      if(submitter && submitter.name==='action' && submitter.value==='calc'){
+        e.preventDefault();
+        const btn = submitter;
+        setLoading(btn, true);
+        const data = new FormData(calcForm);
+        // Ensure action is sent explicitly
+        if(submitter && submitter.name){ data.append(submitter.name, submitter.value); }
+        fetch(window.location.href, {
+          method: 'POST',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCsrf()
+          },
+          body: data
+        }).then(r=>r.json()).then(js=>{
+          if(js && js.ok){
+            updateCalcTabs(js.menu_calculated, js.total_calories);
+          }
+        }).catch(()=>{}).finally(()=>{
+          setLoading(btn, false);
+        });
+      }
+    });
+  }
+})();
+</script>
+
+</body>
+</html>
