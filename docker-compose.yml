@@ -4,7 +4,7 @@ services:
   web:
     build:
       context: .
-      dockerfile: ops/docker/Dockerfile
+      dockerfile: ops/docker/web/Dockerfile
     volumes:
       - .:/app
       - static_volume:/app/staticfiles
@@ -14,6 +14,7 @@ services:
       - .env
     depends_on:
       - db
+      - ollama
 
   db:
     image: mysql:8.0
@@ -35,6 +36,17 @@ services:
     depends_on:
       - web
 
+  ollama:
+    build:
+      context: .
+      dockerfile: ops/docker/ollama/Dockerfile
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
 volumes:
   db_data:
   static_volume:
+  ollama_data:

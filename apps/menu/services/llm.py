@@ -2,15 +2,22 @@ import json
 import numpy as np
 import re
 import ollama
+from pathlib import Path
+from django.conf import settings
 from typing import Any, Dict, List, Optional
 
 MODEL = "hetg/llama3-nutrition"
 
-class LLM:
+class LLMClient:
     _recipes: List[Dict[str, Any]] = []
     _recipe_vectors: Optional[np.ndarray] = None
     _dim: int = 128
     _result: Dict[str, Any] = {"breakfast": [], "first_snack": [], "lunch": [], "second_snack": [], "dinner": []}
+    _model: str = MODEL
+
+    def __init__(self, model: str = MODEL, dim: int = 128):
+        self._dim = dim
+        self._model = model
 
     @staticmethod
     def _deterministic_vector_from_text(text: str, dim: int = 128) -> np.ndarray:
@@ -34,7 +41,7 @@ class LLM:
     def load_recipes(cls) -> List[Dict[str, Any]]:
         if cls._recipes:
             return cls._recipes
-        with open("recipes.json", "r", encoding="utf-8") as f:
+        with open(Path(settings.BASE_DIR) / "apps/menu/services/recipes.json", "r", encoding="utf-8") as f:
             cls._recipes = json.load(f)
         cls._build_recipe_matrix()
         return cls._recipes
@@ -74,11 +81,11 @@ class LLM:
 
     @staticmethod
     def sanitize_menu(menu_json: Dict[str, Any], recipes: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
-        LLM.load_recipes()
-        source = recipes if recipes is not None else LLM._recipes
+        LLMClient.load_recipes()
+        source = recipes if recipes is not None else LLMClient._recipes
         valid_ids = {r.get("id") for r in source}
         id_to_recipe = {r.get("id"): r for r in source}
-        result = LLM._result.copy()
+        result = LLMClient._result.copy()
         for meal in ["breakfast", "first_snack", "lunch", "second_snack", "dinner"]:
             filtered = []
             for dish in menu_json.get(meal, []) or []:
@@ -88,7 +95,7 @@ class LLM:
             result[meal] = filtered
         return result
 
-    def generate_menu(self) -> Dict[str, Any]:
+    def generate(self) -> Dict[str, Any]:
         relevant_recipes = self.retrieve_recipes(query_text="Generate menu", k=20)
         retrieved_docs_text = "\n".join([
             f"ID: {r.get('id')} | Name: {r.get('name')} | {r.get('calories')} kcal | "
@@ -102,12 +109,12 @@ class LLM:
             ]
             response = ollama.chat(
                 model=MODEL,
-                messages=payload
+                messages=payload,
             )
             bot_message = response["message"]["content"]
 
             menu_json = self.extract_json(bot_message)
-            sanitized = self.sanitize_menu(menu_json, LLM._recipes)
+            sanitized = self.sanitize_menu(menu_json, LLMClient._recipes)
             return sanitized
         except Exception as e:
             print(f"Error: {e}")

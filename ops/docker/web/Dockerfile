@@ -15,4 +15,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD ["gunicorn", "menu_shuffler.wsgi:application", "--bind", "0.0.0.0:8000", "--chdir", "/app"]
+CMD ["gunicorn", "menu_shuffler.wsgi:application", "--bind", "0.0.0.0:8000", "--chdir", "/app", "-w", "2", "-k", "gthread", "--threads", "4", "--timeout", "120"]

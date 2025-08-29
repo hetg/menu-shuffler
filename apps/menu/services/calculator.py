@@ -2,7 +2,7 @@ import numpy as np
 from typing import Dict, List, Tuple, Any
 
 
-class Algorithm:
+class Calculator:
     @staticmethod
     def _normalize_weights_array(raw_weights, n_items):
         weights = np.array(raw_weights, dtype=float) if raw_weights is not None else np.ones(n_items, dtype=float)
@@ -60,7 +60,7 @@ class Algorithm:
         total_calories = sum(r["calories"] for meal in menu.values() for r in meal)
         return menu, float(round(total_calories, 2))
 
-    def run_menu(
+    def calculate(
         self,
         target_calories: float,
         breakfast_weight: float,
