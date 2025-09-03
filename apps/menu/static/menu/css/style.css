@@ -12,9 +12,9 @@ input[type="number"]:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(9
 .btn.secondary { background: #fff; color: #111; border-color: #d1d5db; }
 .tabs { display: none; margin-top: 10px; }
 .tabs.visible { display: block; }
-.tab-headers { display: flex; gap: 6px; flex-wrap: wrap; }
-.tab-headers button { padding: 8px 10px; border: 1px solid #d1d5db; background: #f9fafb; border-radius: 8px; cursor: pointer; }
-.tab-headers button.active { background: #eef2ff; border-color: #6366f1; color: #3730a3; }
+.tab-headers, .day-headers { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px;}
+.tab-headers button, .day-headers button { padding: 8px 10px; border: 1px solid #d1d5db; background: #f9fafb; border-radius: 8px; cursor: pointer; }
+.tab-headers button.active, .day-headers button.active { background: #eef2ff; border-color: #6366f1; color: #3730a3; }
 .tab-body { border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; margin-top: 8px; background: #fff; }
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
 th, td { text-align: left; padding: 8px; border-bottom: 1px solid #f0f0f0; }

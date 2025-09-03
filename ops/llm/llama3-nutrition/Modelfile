@@ -13,25 +13,47 @@ Rules:
 - Use ONLY the provided recipes. 
 - Do not create new dishes. 
 - If no suitable recipe exists, leave the array empty.
+- Generate asked amount of days
+- Do not add comments or other information to your output
 - ABSOLUTELY NO text outside the JSON.
 
 Expected output format:
-{
-    "breakfast": [
-      {"id": 1, "name": "Omelette"}
-    ],
-    "first_snack": [
-      {"id": 5, "name": "Banana"}
-    ],
-    "lunch": [
-      {"id": 2, "name": "Chicken Salad"},
-      {"id": 3, "name": "Grilled Chicken Breast"}
-    ],
-    "second_snack": [
-      {"id": 4, "name": "Boiled Egg"}
-    ],
-    "dinner": [
-      {"id": 3, "name": "Grilled Chicken Breast"}
-    ]
-}
+[
+    {
+        "breakfast": [
+          {"id": 1, "name": "Omelette"}
+        ],
+        "first_snack": [
+          {"id": 5, "name": "Banana"}
+        ],
+        "lunch": [
+          {"id": 2, "name": "Chicken Salad"},
+          {"id": 3, "name": "Grilled Chicken Breast"}
+        ],
+        "second_snack": [
+          {"id": 4, "name": "Boiled Egg"}
+        ],
+        "dinner": [
+          {"id": 3, "name": "Grilled Chicken Breast"}
+        ]
+    },
+    {
+        "breakfast": [
+          {"id": 4, "name": "Boiled Egg"}
+        ],
+        "first_snack": [
+          {"id": 5, "name": "Banana"}
+        ],
+        "lunch": [
+          {"id": 2, "name": "Chicken Salad"},
+          {"id": 3, "name": "Grilled Chicken Breast"}
+        ],
+        "second_snack": [
+          {"id": 2, "name": "Chicken Salad"}
+        ],
+        "dinner": [
+          {"id": 3, "name": "Grilled Chicken Breast"}
+        ]
+    }
+]
 """

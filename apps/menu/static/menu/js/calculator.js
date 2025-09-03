@@ -96,39 +96,78 @@
       }
     });
   }
-  function updateLlmTabs(menu){
-    if(!menu) return;
-    ensurePanelsExist('llm', false);
-    const map = {
-      breakfast: 'llm:breakfast',
-      first_snack: 'llm:first_snack',
-      lunch: 'llm:lunch',
-      second_snack: 'llm:second_snack',
-      dinner: 'llm:dinner'
+  let _llm_week = null;
+  let _llm_day = 0;
+  let _calc_week = null;
+  let _calc_day = 0;
+
+  function renderDay(scope){
+    const isCalc = scope==='calc';
+    const week = isCalc ? _calc_week : _llm_week;
+    const dayIdx = isCalc ? _calc_day : _llm_day;
+    const day = Array.isArray(week) ? (week[dayIdx] || {}) : (week || {});
+    const map = isCalc ? {
+      breakfast: 'calc:breakfast', first_snack: 'calc:first_snack', lunch: 'calc:lunch', second_snack: 'calc:second_snack', dinner: 'calc:dinner'
+    } : {
+      breakfast: 'llm:breakfast', first_snack: 'llm:first_snack', lunch: 'llm:lunch', second_snack: 'llm:second_snack', dinner: 'llm:dinner'
     };
     Object.keys(map).forEach(k=>{
       const panel = document.querySelector(`.tab-panel[data-panel="${map[k]}"] tbody`);
-      if(panel){ clearAndAppendRows(panel, menu[k], false); }
+      if(panel){ clearAndAppendRows(panel, day ? day[k] : [], isCalc); }
     });
+  }
+
+  function setupDayHeaders(){
+    [['llm','llm-day-headers'], ['calc','calc-day-headers']].forEach(([scope, id])=>{
+      const headers = document.getElementById(id);
+      if(!headers) return;
+      headers.addEventListener('click', function(e){
+        if(e.target.tagName!=='BUTTON') return;
+        headers.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+        e.target.classList.add('active');
+        const day = parseInt(e.target.getAttribute('data-day')||'0',10) || 0;
+        if(scope==='llm'){ _llm_day = day; }
+        else { _calc_day = day; }
+        renderDay(scope);
+      });
+    });
+  }
+  setupDayHeaders();
+
+  // Hydrate from server-rendered data on initial load
+  try {
+    if (window.__MENU_FROM_LLM__) {
+      _llm_week = Array.isArray(window.__MENU_FROM_LLM__) ? window.__MENU_FROM_LLM__ : [window.__MENU_FROM_LLM__];
+      ensurePanelsExist('llm', false);
+      renderDay('llm');
+      const llmTabs = document.getElementById('llm-tabs');
+      if (llmTabs) llmTabs.classList.add('visible');
+      const calcBtn = document.querySelector('button[name="action"][value="calc"]');
+      if (calcBtn) calcBtn.removeAttribute('disabled');
+    }
+    if (window.__MENU_CALC__) {
+      _calc_week = Array.isArray(window.__MENU_CALC__) ? window.__MENU_CALC__ : [window.__MENU_CALC__];
+      ensurePanelsExist('calc', true);
+      renderDay('calc');
+      const calcTabs = document.getElementById('calc-tabs');
+      if (calcTabs) calcTabs.classList.add('visible');
+    }
+  } catch(e) { /* ignore */ }
+
+  function updateLlmTabs(menu){
+    if(!menu) return;
+    _llm_week = Array.isArray(menu) ? menu : [menu];
+    ensurePanelsExist('llm', false);
+    renderDay('llm');
     const tabs = document.getElementById('llm-tabs');
     if(tabs) tabs.classList.add('visible');
-    // enable calc button
     const calcBtn = document.querySelector('button[name="action"][value="calc"]');
     if(calcBtn){ calcBtn.removeAttribute('disabled'); }
   }
   function updateCalcTabs(menu){
+    _calc_week = Array.isArray(menu) ? menu : [menu];
     ensurePanelsExist('calc', true);
-    const map = {
-      breakfast: 'calc:breakfast',
-      first_snack: 'calc:first_snack',
-      lunch: 'calc:lunch',
-      second_snack: 'calc:second_snack',
-      dinner: 'calc:dinner'
-    };
-    Object.keys(map).forEach(k=>{
-      const panel = document.querySelector(`.tab-panel[data-panel="${map[k]}"] tbody`);
-      if(panel){ clearAndAppendRows(panel, menu ? menu[k] : [], true); }
-    });
+    renderDay('calc');
     const tabs = document.getElementById('calc-tabs');
     if(tabs) tabs.classList.add('visible');
   }

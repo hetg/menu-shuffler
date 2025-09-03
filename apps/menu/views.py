@@ -30,7 +30,7 @@ def index(request):
                 dinner_weight=request.POST.get("dinner_weight"),
                 menu_from_llm=menu_source,
             )
-            menu_calculated = (calculated_menu, total_calories)
+            menu_calculated = calculated_menu
             if _is_ajax(request):
                 return JsonResponse({
                     "ok": True,
