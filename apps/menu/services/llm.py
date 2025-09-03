@@ -13,6 +13,10 @@ class LLMClient:
     _recipe_vectors: Optional[np.ndarray] = None
     _dim: int = 128
     _result: Dict[str, Any] = {"breakfast": [], "first_snack": [], "lunch": [], "second_snack": [], "dinner": []}
+    _weekly_template = [
+        {"breakfast": [], "first_snack": [], "lunch": [], "second_snack": [], "dinner": []}
+        for _ in range(7)
+    ]
     _model: str = MODEL
 
     def __init__(self, model: str = MODEL, dim: int = 128):
@@ -63,40 +67,61 @@ class LLMClient:
         return [cls._recipes[i] for i in top_idx]
 
     @staticmethod
-    def extract_json(text: str) -> Dict[str, Any]:
-        text = (text or "").strip()
-        if not text:
+    def extract_json(text: str) -> Dict[str, Any] | List[Any]:
+        s = (text or "")
+        # Remove UTF-8 BOM if present, then trim
+        s = s.lstrip("\ufeff").strip()
+        if not s:
             raise ValueError("Empty response, no JSON found")
-        if text.startswith("```"):
-            text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text, flags=re.IGNORECASE | re.DOTALL).strip()
-        start = text.find("{")
-        end = text.rfind("}")
-        if start == -1 or end == -1 or end <= start:
-            raise ValueError("No JSON object delimiters found")
-        raw = text[start:end + 1]
+
+        # Strip Markdown code fences if the text is wrapped in them
+        s = re.sub(r"^\s*```(?:json)?\s*|\s*```\s*$", "", s, flags=re.IGNORECASE | re.DOTALL).strip()
+
+        # Find the first JSON start delimiter
+        m = re.search(r"[\{\[]", s)
+        if not m:
+            raise ValueError("No JSON start delimiter found")
+
+        # Start decoding from the first { or [
+        s2 = s[m.start():]
+
         try:
-            return json.loads(raw)
+            obj, idx = json.JSONDecoder().raw_decode(s2)
         except json.JSONDecodeError as e:
             raise ValueError(f"Invalid JSON payload: {e}") from e
 
+        return obj
+
     @staticmethod
-    def sanitize_menu(menu_json: Dict[str, Any], recipes: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
+    def sanitize_menu(menu_json: Dict[str, Any] | List[Dict[str, Any]], recipes: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any] | List[Dict[str, Any]]:
         LLMClient.load_recipes()
         source = recipes if recipes is not None else LLMClient._recipes
         valid_ids = {r.get("id") for r in source}
         id_to_recipe = {r.get("id"): r for r in source}
-        result = LLMClient._result.copy()
-        for meal in ["breakfast", "first_snack", "lunch", "second_snack", "dinner"]:
-            filtered = []
-            for dish in menu_json.get(meal, []) or []:
-                rid = dish.get("id")
-                if rid in valid_ids:
-                    filtered.append(id_to_recipe[rid])
-            result[meal] = filtered
-        return result
 
-    def generate(self) -> Dict[str, Any]:
-        relevant_recipes = self.retrieve_recipes(query_text="Generate menu", k=20)
+        def sanitize_day(day_json: Dict[str, Any]) -> Dict[str, Any]:
+            result = LLMClient._result.copy()
+            for meal in ["breakfast", "first_snack", "lunch", "second_snack", "dinner"]:
+                filtered = []
+                for dish in (day_json or {}).get(meal, []) or []:
+                    rid = dish.get("id") if isinstance(dish, dict) else None
+                    if rid in valid_ids:
+                        filtered.append(id_to_recipe[rid])
+                result[meal] = filtered
+            return result
+
+        if isinstance(menu_json, list):
+            # List of days
+            days = [sanitize_day(day) for day in menu_json[:7]]
+            # Ensure exactly 7 days
+            while len(days) < 7:
+                days.append(LLMClient._result.copy())
+            return days
+        else:
+            return sanitize_day(menu_json)
+
+    def generate(self) -> List[Dict[str, Any]]:
+        relevant_recipes = self.retrieve_recipes(query_text="Generate menu for exactly 7 days", k=20)
         retrieved_docs_text = "\n".join([
             f"ID: {r.get('id')} | Name: {r.get('name')} | {r.get('calories')} kcal | "
             f"P: {r.get('protein')} F: {r.get('fat')} C: {r.get('carbs')}"
@@ -112,10 +137,20 @@ class LLMClient:
                 messages=payload,
             )
             bot_message = response["message"]["content"]
+            print(bot_message)
 
             menu_json = self.extract_json(bot_message)
             sanitized = self.sanitize_menu(menu_json, LLMClient._recipes)
+            # If a single day was returned, replicate to 7 days minimally
+            if isinstance(sanitized, dict):
+                sanitized = [sanitized.copy() for _ in range(7)]
+            # Ensure exactly 7 days
+            if isinstance(sanitized, list):
+                if len(sanitized) > 7:
+                    sanitized = sanitized[:7]
+                while len(sanitized) < 7:
+                    sanitized.append(LLMClient._result.copy())
             return sanitized
         except Exception as e:
             print(f"Error: {e}")
-            return self._result
+            return self._weekly_template.copy()

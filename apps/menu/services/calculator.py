@@ -68,8 +68,8 @@ class Calculator:
         lunch_weight: float,
         second_snack_weight: float,
         dinner_weight: float,
-        menu_from_llm: Dict[str, List[Dict[str, Any]]] | None = None
-    ) -> Tuple[Dict[str, List[Dict[str, Any]]], float]:
+        menu_from_llm: Dict[str, List[Dict[str, Any]]] | List[Dict[str, List[Dict[str, Any]]]] | None = None
+    ) -> Tuple[Dict[str, List[Dict[str, Any]]] | List[Dict[str, List[Dict[str, Any]]]], float]:
         meal_weights = {
             "breakfast": breakfast_weight,
             "first_snack": first_snack_weight,
@@ -87,4 +87,13 @@ class Calculator:
         }
 
         effective_menu = menu_from_llm if menu_from_llm is not None else default_menu
-        return self.generate_menu_with_weights(effective_menu, target_calories, meal_weights)
+        if isinstance(effective_menu, list):
+            weekly = []
+            total = 0.0
+            for day in effective_menu[:7]:
+                menu, day_total = self.generate_menu_with_weights(day, target_calories, meal_weights)
+                weekly.append(menu)
+                total += float(day_total)
+            return weekly, float(round(total, 2))
+        else:
+            return self.generate_menu_with_weights(effective_menu, target_calories, meal_weights)
