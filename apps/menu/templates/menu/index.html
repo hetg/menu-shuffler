@@ -1,0 +1,132 @@
+{% extends "menu/base.html" %}
+{% load static %}
+
+{% block title %}Генератор меню{% endblock %}
+{% block content %}
+<div class="container">
+    <h1>Генератор меню</h1>
+
+    <!-- LLM generation section -->
+    <div class="card">
+        <form method="post" class="flex" id="llm-form">
+            {% csrf_token %}
+            <button type="submit" name="action" value="llm" class="btn">Згенерувати меню</button>
+            <button type="submit" name="action" value="clear" class="btn secondary" id="clear-btn">Очистити</button>
+            <span class="muted">Спершу згенеруйте меню, потім перерахуйте порції.</span>
+        </form>
+        <div id="llm-tabs" class="tabs {% if menu_from_llm %}visible{% endif %}">
+            <div class="tab-headers" data-tabs="llm">
+                <button data-tab="breakfast" class="active">Сніданок</button>
+                <button data-tab="first_snack">Перший перекус</button>
+                <button data-tab="lunch">Обід</button>
+                <button data-tab="second_snack">Другий перекус</button>
+                <button data-tab="dinner">Вечеря</button>
+            </div>
+            <div class="tab-body">
+                {% for key, meal in menu_from_llm.items %}
+                <div class="tab-panel" data-panel="llm:{{ key }}" {% if key != 'breakfast' %}style="display:none"{% endif %}>
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Страва</th>
+                            <th>КБЖВ</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% if meal %}
+                            {% for d in meal %}
+                                <tr>
+                                    <td>{{ d.name }}</td>
+                                    <td>{{ d.calories|default:0 }} / {{ d.protein|default:0 }} / {{ d.fat|default:0 }} / {{ d.carbs|default:0 }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="3" class="muted">Немає даних</td></tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr><td colspan="3" class="muted">Немає даних</td></tr>
+                        {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Algorithm section -->
+    <div class="card">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row">
+                <div class="field">
+                    <label for="target_calories">Кількість калорій</label>
+                    <input type="number" id="target_calories" name="target_calories" value="{{ request.POST.target_calories|default:1800 }}" step="any">
+                </div>
+                <div class="field">
+                    <label for="breakfast_weight">Сніданок (%)</label>
+                    <input type="number" id="breakfast_weight" name="breakfast_weight" value="{{ request.POST.breakfast_weight|default:0.25 }}" step="any">
+                </div>
+                <div class="field">
+                    <label for="first_snack_weight">Перший перекус (%)</label>
+                    <input type="number" id="first_snack_weight" name="first_snack_weight" value="{{ request.POST.first_snack_weight|default:0.05 }}" step="any">
+                </div>
+                <div class="field">
+                    <label for="lunch_weight">Обід (%)</label>
+                    <input type="number" id="lunch_weight" name="lunch_weight" value="{{ request.POST.lunch_weight|default:0.4 }}" step="any">
+                </div>
+                <div class="field">
+                    <label for="second_snack_weight">Другий перекус (%)</label>
+                    <input type="number" id="second_snack_weight" name="second_snack_weight" value="{{ request.POST.second_snack_weight|default:0.05 }}" step="any">
+                </div>
+                <div class="field">
+                    <label for="dinner_weight">Вечеря (%)</label>
+                    <input type="number" id="dinner_weight" name="dinner_weight" value="{{ request.POST.dinner_weight|default:0.25 }}" step="any">
+                </div>
+            </div>
+            <div class="flex" style="margin-top:10px;">
+                <button type="submit" name="action" value="calc" class="btn" {% if not menu_from_llm %}disabled{% endif %}>Порахувати порції</button>
+            </div>
+        </form>
+
+        <div id="calc-tabs" class="tabs {% if menu_from_llm and menu_calculated %}visible{% endif %}" style="margin-top:10px;">
+            <div class="tab-headers" data-tabs="calc">
+                <button data-tab="breakfast" class="active">Сніданок</button>
+                <button data-tab="first_snack">Перший перекус</button>
+                <button data-tab="lunch">Обід</button>
+                <button data-tab="second_snack">Другий перекус</button>
+                <button data-tab="dinner">Вечеря</button>
+            </div>
+            <div class="tab-body">
+                {% for key, meal in menu_calculated.items %}
+                <div class="tab-panel" data-panel="calc:{{ key }}">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Страва</th>
+                            <th>Порція</th>
+                            <th>КБЖВ</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for d in meal %}
+                            <tr>
+                                <td>{{ d.name }}</td>
+                                <td>{{ d.portion|default:0 }}</td>
+                                <td>{{ d.calories|default:0 }} / {{ d.protein|default:0 }} / {{ d.fat|default:0 }} / {{ d.carbs|default:0 }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="3" class="muted">Немає даних</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'menu/js/calculator.js' %}"></script>
+{% endblock %}
