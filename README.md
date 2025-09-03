@@ -56,7 +56,7 @@ cp .env.example .env
 Then adjust values as needed. Example configuration for Docker Compose:
 
 ```
-DEBUG=False
+DEBUG=True
 SECRET_KEY=please-change
 ALLOWED_HOSTS=*
 DATABASE_URL=mysql://menu_user:menu_pass@db:3306/menu_db
@@ -67,7 +67,7 @@ OLLAMA_HOST=http://ollama:11434
 2) Build and start services
 
 ```bash
-docker compose up --build
+docker compose up --build -d
 ```
 
 Services:
@@ -77,6 +77,24 @@ Services:
 - ollama: Ollama server on port 11434 (exposed to host)
 
 Static files are collected into a shared `static_volume` mounted at `/app/staticfiles` (served by nginx config under `ops/nginx/conf.d`).
+
+3) Initialize the app inside the container (migrations and static files)
+
+After the containers are up, run Django management commands inside the web container:
+
+```bash
+# Apply migrations
+docker compose exec web python manage.py migrate
+
+# Collect static files into the shared volume (served by nginx)
+docker compose exec web python manage.py collectstatic --noinput
+```
+
+Now open the site at http://localhost/.
+
+Notes:
+- docker compose up creates the environment, but database migrations and collectstatic must be executed inside the running web container.
+- If you started compose without -d, open a new terminal to run the exec commands.
 
 ## Quickstart (Local, without Docker)
 
