@@ -121,7 +121,7 @@ class LLMClient:
             return sanitize_day(menu_json)
 
     def generate(self) -> List[Dict[str, Any]]:
-        relevant_recipes = self.retrieve_recipes(query_text="Generate menu for 7 days", k=20)
+        relevant_recipes = self.retrieve_recipes(query_text="Generate menu for exactly 7 days", k=20)
         retrieved_docs_text = "\n".join([
             f"ID: {r.get('id')} | Name: {r.get('name')} | {r.get('calories')} kcal | "
             f"P: {r.get('protein')} F: {r.get('fat')} C: {r.get('carbs')}"
